@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
-from model import Model
+from model import Model_LSTM
 
 
 class portfolio_optimizer:
@@ -10,7 +10,6 @@ class portfolio_optimizer:
         self.price_wide = price_long.pivot(index='Date', columns='Ticker', values='Price')
         self.return_wide = self.price_wide.pct_change().iloc[1:,:] #drop 1st row
         self.weight_long = None
-        self.result = None
     
 
     def __optimize_1_run_non_ML(self, returns:pd.DataFrame, period:int, loss_func:str, cov_estimation:str):

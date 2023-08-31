@@ -6,7 +6,7 @@ from tensorflow.keras.models import Sequential
 import tensorflow.keras.backend as K
 
 
-class Model:
+class Model_LSTM:
     def __init__(self):
         self.data = None
         self.model = None
