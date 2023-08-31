@@ -108,7 +108,7 @@ class portfolio_optimizer:
         num_assets = price_wide.shape[1]
         annualized_vol = return_wide.std() * np.sqrt(252)
         
-        model = Model()
+        model = Model_LSTM()
         weights = model.get_allocations(price_wide)
         
         return pd.DataFrame({'Date':date, 
