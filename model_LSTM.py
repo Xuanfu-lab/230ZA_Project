@@ -6,14 +6,11 @@ from tensorflow.keras.models import Sequential
 import tensorflow.keras.backend as K
 
 
-class Model_LSTM:
-    def __init__(self, loss = "paper", reg = False):
+class Model:
+    def __init__(self):
         self.data = None
         self.model = None
-        self.loss = loss
-        self.reg = reg
         
-
     def __build_model(self, input_shape, outputs):
         '''
         Builds and returns the Deep Neural Network that will compute the allocation ratios
@@ -22,20 +19,12 @@ class Model_LSTM:
         inputs: input_shape - tuple of the input shape, outputs - the number of assets
         returns: a Deep Neural Network model
         '''
-        if self.reg == False:
-            model = Sequential([
-                LSTM(64, input_shape=input_shape),
-                Flatten(),
-                Dense(outputs, activation='softmax')
-            ])
-        else:
-            model = Sequential([
-                LSTM(64, input_shape=input_shape),
-                Flatten(),
-                Dense(outputs, activation='softmax', kernel_regularizer=tf.keras.regularizers.l2(10))
-            ])
-            
-            
+        model = Sequential([
+            LSTM(64, input_shape=input_shape),
+            Flatten(),
+            Dense(outputs, activation='softmax')
+        ])
+
         def sharpe_loss(_, y_pred):
             # make all time-series start at 1
             data = tf.divide(self.data, self.data[0])  
@@ -44,25 +33,15 @@ class Model_LSTM:
             portfolio_values = tf.reduce_sum(tf.multiply(data, y_pred), axis=1) 
             
             portfolio_returns = (portfolio_values[1:] - portfolio_values[:-1]) / portfolio_values[:-1]  # % change formula
-            
-            # mean = tf.reduce_mean(portfolio_returns, axis=0)
-            # stddev = tf.math.reduce_std(portfolio_returns, axis=0)
-            # portfolio_returns = (portfolio_returns - mean) / stddev
-            
-            if self.loss == "paper":
-                loss = K.mean(portfolio_returns) / K.std(portfolio_returns)
-            elif self.loss == "return":
-                loss = K.mean(portfolio_returns)
-            elif self.loss == "convex":
-                loss = K.mean(portfolio_returns) - K.std(portfolio_returns)
 
+            sharpe = K.mean(portfolio_returns) / K.std(portfolio_returns)
+            
             # since we want to maximize Sharpe, while gradient descent minimizes the loss, 
             #   we can negate Sharpe (the min of a negated function is its max)
-            return -loss
+            return -sharpe
         
         model.compile(loss=sharpe_loss, optimizer='adam')
         return model
-    
     
     def get_allocations(self, data: pd.DataFrame):
         '''
@@ -87,5 +66,3 @@ class Model_LSTM:
                        verbose=0
                       )
         return self.model.predict(fit_predict_data)[0]
-    
-    
